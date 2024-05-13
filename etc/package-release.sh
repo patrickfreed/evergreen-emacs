@@ -8,7 +8,7 @@ if [ -z "${1+x}" ]; then
 fi
 
 VERSION=${1}
-SOURCE_DIR="./evg-${VERSION}"
+SOURCE_DIR="evg-${VERSION}"
 
 if [ -d "$SOURCE_DIR" ]; then
     rm -r ${SOURCE_DIR};

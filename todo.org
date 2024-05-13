@@ -228,6 +228,7 @@ CLOSED: [2022-06-11 Sat 19:57]
   - [ ] view list of all test failures for a given patch
   - [ ] include inactive versions in waterfall
   - [X] use "q" to close buffers instead of "<"
+  - [ ] from patch page, allow restarting subset of tasks
 
 * TODO new interactive commands [0/3]
   - [ ] view patch by id/URL
