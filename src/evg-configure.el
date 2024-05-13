@@ -261,16 +261,16 @@
 
 (progn
   (setq evg-configure-mode-map (make-sparse-keymap))
-  (when (require 'evil nil t)
-    (evil-define-key 'normal evg-configure-mode-map
-      (kbd "<tab>") 'evg-configure-toggle-current-variant
-      (kbd "m") 'evg-configure-select-at-point
-      (kbd "u") 'evg-configure-deselect-at-point
-      (kbd "x") 'evg-configure-schedule
-      evg-back-key 'evg-back
-      (kbd "r") (lambda ()
-                  (interactive)
-                  (evg-configure-patch evg-configure-target-patch '()))))
+  (with-eval-after-load 'evil
+    (eval '(evil-define-key 'normal evg-configure-mode-map
+             (kbd "<tab>") 'evg-configure-toggle-current-variant
+             (kbd "m") 'evg-configure-select-at-point
+             (kbd "u") 'evg-configure-deselect-at-point
+             (kbd "x") 'evg-configure-schedule
+             evg-back-key 'evg-back
+             (kbd "r") (lambda ()
+                         (interactive)
+                         (evg-configure-patch evg-configure-target-patch '())))))
 
   (define-key evg-configure-mode-map (kbd "<tab>") 'evg-configure-toggle-current-variant)
   (define-key evg-configure-mode-map (kbd "m") 'evg-configure-select-at-point)

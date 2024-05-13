@@ -173,11 +173,11 @@
 (progn
   (setq evg-mode-map (make-sparse-keymap))
 
-  (when (require 'evil nil t)
-    (evil-define-key 'normal evg-mode-map
-      (kbd "<RET>") 'evg-inspect-patch-at-point
-      "p" 'evg-patch
-      "r" 'evg-status-refresh))
+  (with-eval-after-load 'evil
+    (eval '(evil-define-key 'normal evg-mode-map
+             (kbd "<RET>") 'evg-inspect-patch-at-point
+             "p" 'evg-patch
+             "r" 'evg-status-refresh)))
   (define-key evg-mode-map (kbd "<RET>") 'evg-inspect-patch-at-point)
   (define-key evg-mode-map (kbd "p") 'evg-patch)
   (define-key evg-mode-map (kbd "r") 'evg-status-refresh))

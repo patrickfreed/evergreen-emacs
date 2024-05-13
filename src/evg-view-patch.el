@@ -210,7 +210,8 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
   (setq-local evg-view-patch-task-format (or task-format 'grid))
   (setq-local global-hl-line-mode nil)
   (setq-local cursor-type 'hollow)
-  (when (require 'evil nil t)
+
+  (with-eval-after-load 'evil
     (setq-local evil-normal-state-cursor 'hollow))
 
   (cursor-intangible-mode)
@@ -266,21 +267,20 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
 (progn
   (setq evg-view-patch-mode-map (make-sparse-keymap))
 
-  (when (require 'evil nil t)
-    (evil-define-key 'normal evg-view-patch-mode-map
-      (kbd "<RET>") 'evg-view-task-at-point
-      "r" 'evg-view-patch-refresh
-      "d" 'evg-switch-task-format
-      (kbd "M-j") 'evg-goto-next-task-failure
-      (kbd "M-k") 'evg-goto-previous-task-failure
-      evg-back-key 'evg-back))
+  (with-eval-after-load 'evil
+    (eval '(evil-define-key 'normal evg-view-patch-mode-map
+             (kbd "<RET>") 'evg-view-task-at-point
+             "r" 'evg-view-patch-refresh
+             "d" 'evg-switch-task-format
+             (kbd "M-j") 'evg-goto-next-task-failure
+             (kbd "M-k") 'evg-goto-previous-task-failure
+             evg-back-key 'evg-back)))
   (define-key evg-view-patch-mode-map (kbd "<RET>") 'evg-view-task-at-point)
   (define-key evg-view-patch-mode-map (kbd "r") 'evg-view-patch-refresh)
   (define-key evg-view-patch-mode-map (kbd "d") 'evg-switch-task-format)
   (define-key evg-view-patch-mode-map (kbd "M-n") 'evg-goto-next-task-failure)
   (define-key evg-view-patch-mode-map (kbd "M-p") 'evg-goto-previous-task-failure)
-  (define-key evg-view-task-mode-map evg-back-key 'evg-back)
-  )
+  (define-key evg-view-task-mode-map evg-back-key 'evg-back))
 
 (define-derived-mode
   evg-view-patch-mode

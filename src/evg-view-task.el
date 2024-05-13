@@ -258,11 +258,11 @@
 (progn
   (setq evg-view-task-mode-map (make-sparse-keymap))
 
-  (when (require 'evil nil t)
-    (evil-define-key 'normal evg-view-task-mode-map
-      (kbd "<RET>") 'evg-view-test-at-point
-      "r" 'evg-view-task-refresh
-      evg-back-key 'evg-back))
+  (with-eval-after-load 'evil
+    (eval '(evil-define-key 'normal evg-view-task-mode-map
+             (kbd "<RET>") 'evg-view-test-at-point
+             "r" 'evg-view-task-refresh
+             evg-back-key 'evg-back)))
   (define-key evg-view-task-mode-map (kbd "<RET>") 'evg-view-test-at-point)
   (define-key evg-view-task-mode-map (kbd "r") 'evg-view-task-refresh)
   (define-key evg-view-task-mode-map evg-back-key 'evg-back))
@@ -284,9 +284,9 @@
 (progn
   (setq evg-view-logs-mode-map (make-sparse-keymap))
 
-  (when (require 'evil nil t)
-    (evil-define-key 'normal evg-view-logs-mode-map
-      evg-back-key 'evg-back))
+  (with-eval-after-load 'evil
+    (eval '(evil-define-key 'normal evg-view-logs-mode-map
+             evg-back-key 'evg-back)))
   (define-key evg-view-logs-mode-map evg-back-key 'evg-back))
 
 (defun evg-view-logs (buffer-name logs)
@@ -346,12 +346,12 @@
 (progn
   (setq evg-failure-details-mode-map (make-sparse-keymap))
 
-  (when (require 'evil nil t)
-    (evil-define-key 'normal evg-failure-details-mode-map
-      evg-back-key 'evg-back
-      (kbd "M-j") 'evg-failure-details-goto-next-link
-      (kbd "M-k") 'evg-failure-details-goto-previous-link
-      (kbd "<RET>") 'evg-failure-details-visit-link-at-point))
+  (with-eval-after-load 'evil
+    (eval '(evil-define-key 'normal evg-failure-details-mode-map
+             evg-back-key 'evg-back
+             (kbd "M-j") 'evg-failure-details-goto-next-link
+             (kbd "M-k") 'evg-failure-details-goto-previous-link
+             (kbd "<RET>") 'evg-failure-details-visit-link-at-point)))
   (define-key evg-failure-details-mode-map evg-back-key 'evg-back)
   (define-key evg-failure-details-mode-map (kbd "<RET>") 'evg-failure-details-visit-link-at-point)
   (define-key evg-failure-details-mode-map (kbd "M-n") 'evg-failure-details-goto-next-link)
