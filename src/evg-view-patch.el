@@ -17,7 +17,18 @@
 (defvar-local evg-view-patch-tasks nil)
 (defvar-local evg-view-patch-task-format nil)
 
-(cl-defstruct evg-patch id project-id description number revision status author activated create-time start-time finish-time)
+(cl-defstruct evg-patch
+  id
+  project-id
+  description
+  number
+  revision
+  status
+  author
+  activated
+  create-time
+  start-time
+  finish-time)
 
 (defun evg-patch-parse-graphql-response (patch)
   "Parse a patch() GrapQL query response into an evg-patch."
@@ -72,12 +83,12 @@
 
 (defun evg-get-current-patch-tasks ()
   "Fetches full list of task results broken down by variant."
-  (message "Fetching patch data")
+  (message "Fetching patch data...")
   (let ((buildvariants-data
          (evg-api-graphql-request
           (format
            "{
-              version(id: %S) {
+              version(versionId: %S) {
                 buildVariants(options: {}) {
                   variant
                   displayName
@@ -90,7 +101,7 @@
               }
             }"
            (evg-patch-id evg-view-patch-patch)))))
-    (message "Fetching patch data done")
+    (message "Fetching patch data...done")
     (seq-map
      (lambda (variant-data)
        (let ((variant-display-name (gethash "displayName" variant-data)))

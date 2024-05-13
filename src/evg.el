@@ -263,7 +263,7 @@
   (evg-api-graphql-request-async
    (format
     "{
-       patch(id: %S) {
+       patch(patchId: %S) {
        %s
        }
      }"
@@ -277,7 +277,7 @@
   (evg-api-graphql-request-async
    (format
     "{
-       version(id: %S) {
+       version(versionId: %S) {
          id
          message
          status
