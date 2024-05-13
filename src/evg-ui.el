@@ -40,11 +40,20 @@
   (format "\\(%s\\|%s\\|%s\\)" evg-status-undispatched evg-status-willrun evg-status-blocked)
   "Regular expression matching any task status associated with not being dispatched yet")
 
+(defconst evg-status-success-regex
+  "\\(succ\\|pass\\)"
+  "Regular expression matching any task or patch success status.")
+
+(defun evg-status-passed-p (status) (string-match-p evg-status-success-regex status))
+(defun evg-status-failed-p (status) (string-match-p evg-status-failed-regex status))
+(defun evg-status-system-failed-p (status) (string-match-p evg-status-system-failure status))
+(defun evg-status-undispatched-p (status) (string-match-p evg-status-undispatched-regex status))
+
 (defun evg-status-text (status)
   "Propertize the given status string appropriately according to the value of the status (e.g. green for \"success\")."
   (let ((status-face
          (cond
-          ((string-match-p "\\(succ\\|pass\\)" status) 'success)
+          ((evg-status-passed-p status) 'success)
           ((string-match-p evg-status-system-failure status) 'evg-status-text-system-failed)
           ((string-match-p evg-status-failed-regex status) 'error)
           ((string-match-p "start" status) 'warning)

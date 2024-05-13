@@ -148,17 +148,19 @@
 
 (defun evg-insert-variant-tasks (tasks task-format)
   (if (eq task-format 'text)
-      (seq-do
-       (lambda (task)
-         (insert
-          (with-temp-buffer
-            (insert (format "%9s %s"
-                            (evg-status-text (evg-task-info-status task))
-                            (evg-task-info-display-name task)))
-            (put-text-property (point-min) (point-max) 'evg-task-info task)
-            (buffer-string)))
-         (newline))
-       tasks)
+      (let ((shown-tasks (seq-filter (lambda (task) (not (evg-status-passed-p (evg-task-info-status task)))) tasks)))
+        (newline)
+        (seq-do
+         (lambda (task)
+           (insert
+            (with-temp-buffer
+              (insert (format "    %s %s"
+                              (evg-status-text (evg-task-info-status task))
+                              (evg-task-info-display-name task)))
+              (put-text-property (point-min) (point-max) 'evg-task-info task)
+              (buffer-string)))
+           (newline))
+         shown-tasks))
     (insert
      (evg-grid-create
       ""
@@ -264,6 +266,21 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
       (with-temp-buffer
         (insert (format "%s" (car variant-tasks)))
         (add-text-properties (point-min) (point-max) (list 'face 'bold))
+        (let* ((tasks (cdr variant-tasks))
+               (n-undispatched (seq-length (seq-filter (lambda (task) (evg-status-undispatched-p (evg-task-info-status task))) tasks)))
+               (n-passed (seq-length (seq-filter (lambda (task) (evg-status-passed-p (evg-task-info-status task))) tasks)))
+               (n-failed (seq-length (seq-filter (lambda (task) (evg-status-failed-p (evg-task-info-status task))) tasks)))
+               (n-system-failed (seq-length (seq-filter (lambda (task) (evg-status-system-failed-p (evg-task-info-status task))) tasks)))
+               (aggregate-stats (list)))
+          (when (> n-passed 0)
+            (setq aggregate-stats (cons (propertize (format "%s passed" n-passed) 'face 'success) aggregate-stats)))
+          (when (> n-failed 0)
+            (setq aggregate-stats (cons (propertize (format "%s failed" n-failed) 'face 'error) aggregate-stats)))
+          (when (> n-system-failed 0)
+            (setq aggregate-stats (cons (propertize (format "%s system failed" n-system-failed) 'face 'evg-status-text-system-failed) aggregate-stats)))
+          (when (> n-undispatched 0)
+            (setq aggregate-stats (cons (propertize (format "%s undispatched" n-undispatched) 'face 'shadow) aggregate-stats)))
+          (insert " (" (string-join (reverse aggregate-stats) ", ") ")"))
         (buffer-string)))
      (newline)
      (evg-insert-variant-tasks (cdr variant-tasks) task-format)

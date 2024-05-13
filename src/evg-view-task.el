@@ -26,8 +26,8 @@
   event-log
   tests)
 
-(defun evg-task-is-failed (task)
-  (string-match-p evg-status-failed-regex (evg-task-status task)))
+(defun evg-task-is-failed (status)
+  (string-match-p evg-status-failed-regex status))
 
 (defun evg-task-is-in-progress (task)
   (string= (evg-task-status task) evg-status-started))
@@ -223,7 +223,7 @@
 
       (insert-button "View Task Logs" 'action (lambda (_) (evg-view-current-task-logs)))
       (newline)
-      (when (evg-task-is-failed task)
+      (when (evg-task-is-failed (evg-task-status task))
         (insert-button "View Failure Details" 'action (lambda (_) (evg-view-failure-details (format "%s / %s" evg-view-task-patch-title (evg-current-task-full-name)) task))))
       (when (evg-task-is-in-progress task)
         (newline)
@@ -457,7 +457,7 @@
       (newline))
 
     (defun evg-insert-issue-property (key value)
-      (insert (propertize (format "    %s: " key) 'face 'italic) value)
+      (insert "    " (propertize (format "%s:" key) 'face 'italic) " " value)
       (newline))
 
     (insert (propertize "Known Issues" 'face 'bold))
@@ -469,7 +469,7 @@
        (evg-insert-issue-property "Status" (evg-issue-status-text issue)))
      (evg-failure-details-known-issues failure-details))
     (when (eq (evg-failure-details-known-issues failure-details) nil)
-      (insert (propertize "No known issues related to this failure." 'face 'italic)))
+      (insert (propertize "No known issues related to this failure." 'face 'italic 'rear-nonsticky '(face))))
     (newline)
 
     (insert (propertize "Suspected Issues" 'face 'bold))
@@ -482,7 +482,7 @@
        (evg-insert-issue-property "Confidence in suggestion" (format "%.1f%%" (* (evg-issue-confidence issue) 100.0))))
      (evg-failure-details-suspected-issues failure-details))
     (when (eq (evg-failure-details-suspected-issues failure-details) nil)
-      (insert (propertize "No suspected issues related to this failure." 'face 'italic)))
+      (insert (propertize "No suspected issues related to this failure." 'face 'italic 'rear-nonsticky '(face))))
     (newline 2)
 
     (insert (propertize "Note" 'face 'bold))
