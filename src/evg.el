@@ -292,3 +292,5 @@
    (lambda (data)
      (let ((version (gethash "version" data)))
        (funcall handler (evg-patch-parse-version-graphql-response version))))))
+
+(provide 'evg)
