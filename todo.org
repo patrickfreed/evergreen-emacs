@@ -131,21 +131,23 @@
 
 * ---------------- release ready here ---------------
   
-* TODO BB integrations / failure details [5/12]
+* TODO BB integrations / failure details [7/13]
 - [X] add button to switch to failure-details buffer for that task
 - [X] linkify build baron link
 - [X] linkify issue
 - [X] list known and suspected issues
 - [X] goto next link in buffer
-- [ ] sort failed tasks to top
-  - [ ] default to text view
-  - [ ] hide passed tests
-  - [ ] print aggregate statuses
-  - [ ] show passed tests
-  - [ ] fix formatting of failed tests in text mode
-  - [ ] fix newline bug
-- [ ] indicate if failure is known issue or not
-  - [ ] ensure task buffer reflects this
+- [-] sort failed tasks to top
+  - [X] hide passed tests
+  - [X] print aggregate statuses
+  - [X] default to text view
+  - [X] fix formatting of failed tests in text mode
+  - [X] fix newline bug
+  - [ ] show hidden tests
+  - [ ] fix bug where string arg is null on last task failure
+- [X] indicate if failure is known issue or not
+  - [X] ensure task buffer reflects this
+- [ ] goto first error in logs view
 - [ ] button to file ticket for failure
   - [ ] view created tickets, if any
 - [ ] add known issue button

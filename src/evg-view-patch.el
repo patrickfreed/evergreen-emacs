@@ -15,7 +15,7 @@
 
 (defvar-local evg-view-patch-patch nil)
 (defvar-local evg-view-patch-tasks nil)
-(defvar-local evg-view-patch-task-format nil)
+(defvar-local evg-view-patch-task-format 'text)
 
 (cl-defstruct evg-patch
   id
@@ -148,19 +148,28 @@
 
 (defun evg-insert-variant-tasks (tasks task-format)
   (if (eq task-format 'text)
-      (let ((shown-tasks (seq-filter (lambda (task) (not (evg-status-passed-p (evg-task-info-status task)))) tasks)))
-        (newline)
+      (let* ((shown-tasks (seq-filter (lambda (task)
+                                        (let ((task-status (evg-task-info-status task)))
+                                          (not (or (evg-status-passed-p task-status) (evg-status-unscheduled-p task-status)))))
+                                      tasks))
+             (filter-tasks (lambda (status-fn) (seq-filter (lambda (task) (funcall status-fn (evg-task-info-status task))) shown-tasks)))
+             (failed-tasks (funcall filter-tasks 'evg-status-failed-p))
+             (system-failed-tasks (funcall filter-tasks 'evg-status-system-failed-p))
+             (known-issue-tasks (funcall filter-tasks 'evg-status-known-issue-p))
+             (started-tasks (funcall filter-tasks 'evg-status-started-p))
+             (other-tasks (cl-set-difference shown-tasks (append failed-tasks system-failed-tasks known-issue-tasks))))
         (seq-do
          (lambda (task)
            (insert
             (with-temp-buffer
-              (insert (format "    %s %s"
+              (insert (format "  %-14s %s"
                               (evg-status-text (evg-task-info-status task))
                               (evg-task-info-display-name task)))
               (put-text-property (point-min) (point-max) 'evg-task-info task)
+              (put-text-property (point-min) (point-max) 'rear-nonsticky t)
               (buffer-string)))
            (newline))
-         shown-tasks))
+         (append failed-tasks system-failed-tasks known-issue-tasks started-tasks other-tasks)))
     (insert
      (evg-grid-create
       ""
@@ -190,8 +199,8 @@
   (when (not (evg--advance-until
               travel-fn
               (lambda ()
-                (when-let ((task (evg-task-at-point)))
-                  (string-match-p evg-status-failed-regex (evg-task-info-status task))))))
+                (when-let ((task (evg-task-at-point)) (status (evg-task-info-status task)))
+                  (or (evg-status-failed-p status) (evg-status-system-failed-p status) (evg-status-known-issue-p status))))))
     (message "No more failures")))
 
 (defun evg-view-patch-refresh ()
@@ -267,10 +276,14 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
         (insert (format "%s" (car variant-tasks)))
         (add-text-properties (point-min) (point-max) (list 'face 'bold))
         (let* ((tasks (cdr variant-tasks))
-               (n-undispatched (seq-length (seq-filter (lambda (task) (evg-status-undispatched-p (evg-task-info-status task))) tasks)))
-               (n-passed (seq-length (seq-filter (lambda (task) (evg-status-passed-p (evg-task-info-status task))) tasks)))
-               (n-failed (seq-length (seq-filter (lambda (task) (evg-status-failed-p (evg-task-info-status task))) tasks)))
-               (n-system-failed (seq-length (seq-filter (lambda (task) (evg-status-system-failed-p (evg-task-info-status task))) tasks)))
+               (count-tasks (lambda (status-fn) (seq-count (lambda (task) (funcall status-fn (evg-task-info-status task))) tasks)))
+               (n-undispatched (funcall count-tasks 'evg-status-undispatched-p))
+               (n-unscheduled (funcall count-tasks 'evg-status-unscheduled-p))
+               (n-passed (funcall count-tasks 'evg-status-passed-p))
+               (n-failed (funcall count-tasks 'evg-status-failed-p))
+               (n-system-failed (funcall count-tasks 'evg-status-system-failed-p))
+               (n-known-issue (funcall count-tasks 'evg-status-known-issue-p))
+               (n-started (funcall count-tasks 'evg-status-started-p))
                (aggregate-stats (list)))
           (when (> n-passed 0)
             (setq aggregate-stats (cons (propertize (format "%s passed" n-passed) 'face 'success) aggregate-stats)))
@@ -278,8 +291,14 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
             (setq aggregate-stats (cons (propertize (format "%s failed" n-failed) 'face 'error) aggregate-stats)))
           (when (> n-system-failed 0)
             (setq aggregate-stats (cons (propertize (format "%s system failed" n-system-failed) 'face 'evg-status-text-system-failed) aggregate-stats)))
+          (when (> n-known-issue 0)
+            (setq aggregate-stats (cons (propertize (format "%s known issue" n-known-issue) 'face 'shadow) aggregate-stats)))
+          (when (> n-started 0)
+            (setq aggregate-stats (cons (propertize (format "%s started" n-started) 'face 'warning) aggregate-stats)))
           (when (> n-undispatched 0)
             (setq aggregate-stats (cons (propertize (format "%s undispatched" n-undispatched) 'face 'shadow) aggregate-stats)))
+          (when (> n-unscheduled 0)
+            (setq aggregate-stats (cons (propertize (format "%s unscheduled" n-unscheduled) 'face 'shadow) aggregate-stats)))
           (insert " (" (string-join (reverse aggregate-stats) ", ") ")"))
         (buffer-string)))
      (newline)
@@ -287,8 +306,7 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
      (newline))
    evg-view-patch-tasks)
   (read-only-mode)
-  (goto-char (point-min))
-  )
+  (goto-char (point-min)))
 
 (defvar evg-view-patch-mode-map nil "Keymap for evg-view-patch buffers")
 

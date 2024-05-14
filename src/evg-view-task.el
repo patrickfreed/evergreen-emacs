@@ -26,8 +26,8 @@
   event-log
   tests)
 
-(defun evg-task-is-failed (status)
-  (string-match-p evg-status-failed-regex status))
+(defun evg-task-is-failed (task)
+  (evg-status-failed-p (evg-task-status task)))
 
 (defun evg-task-is-in-progress (task)
   (string= (evg-task-status task) evg-status-started))
@@ -223,7 +223,7 @@
 
       (insert-button "View Task Logs" 'action (lambda (_) (evg-view-current-task-logs)))
       (newline)
-      (when (evg-task-is-failed (evg-task-status task))
+      (when (evg-task-is-failed task)
         (insert-button "View Failure Details" 'action (lambda (_) (evg-view-failure-details (format "%s / %s" evg-view-task-patch-title (evg-current-task-full-name)) task))))
       (when (evg-task-is-in-progress task)
         (newline)

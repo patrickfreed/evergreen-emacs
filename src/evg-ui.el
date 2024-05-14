@@ -20,6 +20,7 @@
 (defconst evg-status-success "success")
 (defconst evg-status-aborted "aborted")
 (defconst evg-status-undispatched "undispatched")
+(defconst evg-status-unscheduled "unscheduled")
 (defconst evg-status-willrun "will-run")
 (defconst evg-status-blocked "blocked")
 (defconst evg-status-system-failure "system-failed")
@@ -33,12 +34,17 @@
   :group 'evg)
 
 (defconst evg-status-failed-regex
-  "\\(fail\\|abort\\|timed.out\\|known-issue\\)"
+  "\\(^fail\\|abort\\|timed.out\\)"
   "Regular expression matching any task status associated with failure")
 
 (defconst evg-status-undispatched-regex
   (format "\\(%s\\|%s\\|%s\\)" evg-status-undispatched evg-status-willrun evg-status-blocked)
   "Regular expression matching any task status associated with not being dispatched yet")
+
+;; matches system-failed, system-unresponsive
+(defconst evg-status-system-failed-regex
+  "^system-"
+  "Regular expression matching any task status associated with system failure.")
 
 (defconst evg-status-success-regex
   "\\(succ\\|pass\\)"
@@ -46,17 +52,20 @@
 
 (defun evg-status-passed-p (status) (string-match-p evg-status-success-regex status))
 (defun evg-status-failed-p (status) (string-match-p evg-status-failed-regex status))
-(defun evg-status-system-failed-p (status) (string-match-p evg-status-system-failure status))
+(defun evg-status-system-failed-p (status) (string-match-p evg-status-system-failed-regex status))
+(defun evg-status-known-issue-p (status) (string-match-p "known-issue" status))
 (defun evg-status-undispatched-p (status) (string-match-p evg-status-undispatched-regex status))
+(defun evg-status-unscheduled-p (status) (string-match-p evg-status-unscheduled status))
+(defun evg-status-started-p (status) (string-match-p "start" status))
 
 (defun evg-status-text (status)
   "Propertize the given status string appropriately according to the value of the status (e.g. green for \"success\")."
   (let ((status-face
          (cond
           ((evg-status-passed-p status) 'success)
-          ((string-match-p evg-status-system-failure status) 'evg-status-text-system-failed)
-          ((string-match-p evg-status-failed-regex status) 'error)
-          ((string-match-p "start" status) 'warning)
+          ((evg-status-system-failed-p status) 'evg-status-text-system-failed)
+          ((evg-status-failed-p status) 'error)
+          ((evg-status-started-p status) 'warning)
           (t 'shadow))))
     (propertize status 'face status-face)))
 
