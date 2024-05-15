@@ -16,6 +16,9 @@
 (defvar-local evg-view-patch-patch nil)
 (defvar-local evg-view-patch-tasks nil)
 (defvar-local evg-view-patch-task-format 'text)
+(defvar-local evg-view-patch-text-format-show-all-tasks nil
+  "Whether to show all tasks when displaying in text mode or to filter out
+tasks with certain statuses (e.g. tasks that succeeded).")
 
 (cl-defstruct evg-patch
   id
@@ -146,18 +149,25 @@
                         (if (eq evg-view-patch-task-format 'text) 'grid 'text)
                         evg-view-patch-tasks))
 
+(defun evg-view-patch-text-format-toggle-show-all-tasks ()
+  (interactive)
+  (when (eq evg-view-patch-task-format 'text)
+    (setq-local evg-view-patch-text-format-show-all-tasks (not evg-view-patch-text-format-show-all-tasks))
+    (evg-view-patch evg-view-patch-patch 'text evg-view-patch-tasks)))
+
 (defun evg-insert-variant-tasks (tasks task-format)
   (if (eq task-format 'text)
-      (let* ((shown-tasks (seq-filter (lambda (task)
-                                        (let ((task-status (evg-task-info-status task)))
-                                          (not (or (evg-status-passed-p task-status) (evg-status-unscheduled-p task-status)))))
-                                      tasks))
-             (filter-tasks (lambda (status-fn) (seq-filter (lambda (task) (funcall status-fn (evg-task-info-status task))) shown-tasks)))
+      (let* ((not-passed-tasks (seq-filter (lambda (task)
+                                             (let ((task-status (evg-task-info-status task)))
+                                               (not (or (evg-status-passed-p task-status) (evg-status-unscheduled-p task-status)))))
+                                           tasks))
+             (filter-tasks (lambda (status-fn) (seq-filter (lambda (task) (funcall status-fn (evg-task-info-status task))) not-passed-tasks)))
              (failed-tasks (funcall filter-tasks 'evg-status-failed-p))
              (system-failed-tasks (funcall filter-tasks 'evg-status-system-failed-p))
              (known-issue-tasks (funcall filter-tasks 'evg-status-known-issue-p))
              (started-tasks (funcall filter-tasks 'evg-status-started-p))
-             (other-tasks (cl-set-difference shown-tasks (append failed-tasks system-failed-tasks known-issue-tasks))))
+             (other-tasks (cl-set-difference not-passed-tasks (append failed-tasks system-failed-tasks known-issue-tasks)))
+             (ordered-tasks (append failed-tasks system-failed-tasks known-issue-tasks started-tasks other-tasks)))
         (seq-do
          (lambda (task)
            (insert
@@ -169,7 +179,9 @@
               (put-text-property (point-min) (point-max) 'rear-nonsticky t)
               (buffer-string)))
            (newline))
-         (append failed-tasks system-failed-tasks known-issue-tasks started-tasks other-tasks)))
+         (if evg-view-patch-text-format-show-all-tasks
+             (append ordered-tasks (cl-set-difference tasks ordered-tasks))
+           ordered-tasks)))
     (insert
      (evg-grid-create
       ""
@@ -223,7 +235,8 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
             (evg-patch-title patch)
             (truncate-string-to-width (evg-patch-description patch) 50 nil nil t))))
   (read-only-mode -1)
-  (evg-view-patch-mode)
+  (unless (derived-mode-p 'evg-view-patch-mode)
+    (evg-view-patch-mode))
   (setq display-line-numbers nil)
   (erase-buffer)
   (when prev-buffer (setq-local evg-previous-buffer prev-buffer))
