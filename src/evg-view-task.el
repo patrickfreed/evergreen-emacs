@@ -309,7 +309,9 @@
     (evg-view-logs-mode)
     (setq-local evg-previous-buffer back-buffer)
     (setq-local header-line-format buffer-name)
-    (goto-char (point-min))))
+    (goto-char (point-min))
+    (compilation-next-error 1)
+    (recenter-top-bottom)))
 
 (cl-defstruct evg-failure-details
   note
