@@ -131,7 +131,7 @@
 
 * ---------------- release ready here ---------------
   
-* TODO BB integrations / failure details [6/14]
+* TODO BB integrations / failure details [7/14]
 - [X] add button to switch to failure-details buffer for that task
 - [X] linkify build baron link
 - [X] linkify issue
@@ -147,7 +147,7 @@
   - [ ] fix bug where string arg is null on last task failure
 - [X] indicate if failure is known issue or not
   - [X] ensure task buffer reflects this
-- [ ] goto first test failure in task view
+- [X] goto next/prev test failure in task view
 - [ ] goto first error in logs view
 - [ ] button to file ticket for failure
   - [ ] view created tickets, if any

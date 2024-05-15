@@ -59,6 +59,9 @@
     'evg-task-test test))
   (newline))
 
+(defun evg-task-test-failed-p (test)
+  (string= (evg-task-test-status test) "fail"))
+
 (defun evg-task-parse-graphql (data)
   (make-evg-task
    :id (evg--gethash data "id")
@@ -169,9 +172,12 @@
      (message "Task restarted")
      (evg-view-task-refresh))))
 
+(defun evg-test-at-point ()
+  (get-text-property (point) 'evg-task-test))
+
 (defun evg-view-test-at-point ()
   (interactive)
-  (if-let ((test (get-text-property (point) 'evg-task-test)))
+  (if-let ((test (evg-get-test-at-point)))
       (if (or (not (evg-task-test-log-url test)) (string= "" (evg-task-test-log-url test)))
           (message "no logs to view")
         (progn
@@ -205,9 +211,9 @@
   (newline))
 
 (defun evg-view-task (task-id &optional patch-title previous-buffer)
-  (message "fetching task data")
+  (message "Fetching task data...")
   (let ((task (evg-get-task task-id)))
-    (message "fetching data done")
+    (message "Fetching task data...done")
     (let ((full-display-name (format "%s / %s" (evg-task-build-variant-display-name task) (evg-task-display-name task)))
           (prefix (if patch-title (concat patch-title " / ") "")))
       (switch-to-buffer (get-buffer-create (format "evg-view-task: %s%s" prefix full-display-name)))
@@ -234,7 +240,7 @@
       (newline 2)
       (let ((failed-tests
              (seq-filter
-              (lambda (test) (string= "fail" (evg-task-test-status test)))
+              (lambda (test) (evg-task-test-failed-p test))
               (evg-task-tests task)))
             (passed-tests
              (seq-filter
@@ -262,9 +268,13 @@
     (eval '(evil-define-key 'normal evg-view-task-mode-map
              (kbd "<RET>") 'evg-view-test-at-point
              "r" 'evg-view-task-refresh
+             (kbd "M-j") 'evg-goto-next-test-failure
+             (kbd "M-k") 'evg-goto-previous-test-failure
              evg-back-key 'evg-back)))
   (define-key evg-view-task-mode-map (kbd "<RET>") 'evg-view-test-at-point)
   (define-key evg-view-task-mode-map (kbd "r") 'evg-view-task-refresh)
+  (define-key evg-view-patch-mode-map (kbd "M-n") 'evg-goto-next-test-failure)
+  (define-key evg-view-patch-mode-map (kbd "M-p") 'evg-goto-previous-test-failure)
   (define-key evg-view-task-mode-map evg-back-key 'evg-back))
 
 (define-derived-mode
@@ -334,6 +344,24 @@
      :summary (evg--gethash jira-fields "summary")
      :status (evg--gethash jira-fields "status" "name")
      :resolution (evg--gethash jira-fields "resolutionName"))))
+
+(defun evg-goto-next-test-failure ()
+  "Move the point to the next test failure in the task."
+  (interactive)
+  (evg-goto-test-failure (lambda () (= (forward-line) 0))))
+
+(defun evg-goto-previous-test-failure ()
+  "Move the point to the previous test failure in the task."
+  (interactive)
+  (evg-goto-test-failure (lambda () (= (forward-line -1) 0))))
+
+(defun evg-goto-test-failure (travel-fn)
+  (when (not (evg--advance-until
+              travel-fn
+              (lambda ()
+                (when-let ((test (evg-test-at-point)))
+                  (evg-task-test-failed-p test)))))
+    (message "No more failures")))
 
 (define-derived-mode
   evg-failure-details-mode

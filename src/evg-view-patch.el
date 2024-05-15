@@ -211,7 +211,7 @@ tasks with certain statuses (e.g. tasks that succeeded).")
   (when (not (evg--advance-until
               travel-fn
               (lambda ()
-                (when-let ((task (evg-task-at-point)) (status (evg-task-info-status task)))
+                (when-let* ((task (evg-task-at-point)) (status (evg-task-info-status task)))
                   (or (evg-status-failed-p status) (evg-status-system-failed-p status) (evg-status-known-issue-p status))))))
     (message "No more failures")))
 
