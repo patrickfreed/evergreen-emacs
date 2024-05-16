@@ -12,33 +12,47 @@
 (cl-defstruct evg-failure-details
   note
   known-issues
-  suspected-issues)
+  suspected-issues
+  created-tickets)
 
 (defun evg-failure-details-parse (data)
-  (make-evg-failure-details
-   :note (evg--gethash data "note" "message")
-   :known-issues (seq-map
-                  'evg-issue-parse
-                  (evg--gethash data "issues"))
-   :suspected-issues (seq-map
-                      'evg-issue-parse
-                      (evg--gethash data "suspectedIssues"))))
+  (let* ((annotation (evg--gethash data "task" "annotation")))
+    (make-evg-failure-details
+     :note (evg--gethash annotation "note" "message")
+     :known-issues (seq-map
+                    'evg-issue-parse
+                    (evg--gethash annotation "issues"))
+     :suspected-issues (seq-map
+                        'evg-issue-parse
+                        (evg--gethash annotation "suspectedIssues"))
+     :created-tickets (seq-map
+                      'evg-jira-ticket-parse
+                      (evg--gethash data "bbGetCreatedTickets")))))
 
 (cl-defstruct evg-issue
   "A jira issue related to a task/test failure."
   key
   url
-  summary
   confidence
+  ticket)
+
+(cl-defstruct evg-jira-ticket
+  key
+  summary
   status
   resolution)
 
 (defun evg-issue-parse (data)
-  (let ((jira-fields (evg--gethash data "jiraTicket" "fields")))
-    (make-evg-issue
-     :key (evg--gethash data "issueKey")
-     :url (evg--gethash data "url")
-     :confidence (evg--gethash data "confidenceScore")
+  (make-evg-issue
+   :key (evg--gethash data "issueKey")
+   :url (evg--gethash data "url")
+   :confidence (evg--gethash data "confidenceScore")
+   :ticket (evg-jira-ticket-parse (evg--gethash data "jiraTicket"))))
+
+(defun evg-jira-ticket-parse (data)
+  (let ((jira-fields (evg--gethash data "fields")))
+    (make-evg-jira-ticket
+     :key (evg--gethash data "key")
      :summary (evg--gethash jira-fields "summary")
      :status (evg--gethash jira-fields "status" "name")
      :resolution (evg--gethash jira-fields "resolutionName"))))
@@ -67,6 +81,7 @@
              (kbd "d k") 'evg-view-failure-details-remove-known-issue
              (kbd "a s") 'evg-view-failure-details-add-suspected-issue
              (kbd "d s") 'evg-view-failure-details-remove-suspected-issue
+             (kbd "c") 'evg-view-failure-details-create-ticket
              "r" 'evg-view-failure-details-refresh
              (kbd "<RET>") 'evg-view-failure-details-visit-link-at-point)))
   (define-key evg-view-failure-details-mode-map evg-back-key 'evg-back)
@@ -76,10 +91,11 @@
   (define-key evg-view-failure-details-mode-map (kbd "M-p") 'evg-view-failure-details-goto-previous-link)
   (define-key evg-view-failure-details-mode-map (kbd "a k") 'evg-view-failure-details-add-known-issue)
   (define-key evg-view-failure-details-mode-map (kbd "d k") 'evg-view-failure-details-remove-known-issue)
-  (define-key evg-view-failure-details-mode-map (kbd "a s") 'evg-view-failure-details-add-suspected-issue))
+  (define-key evg-view-failure-details-mode-map (kbd "a s") 'evg-view-failure-details-add-suspected-issue)
   (define-key evg-view-failure-details-mode-map (kbd "d s") 'evg-view-failure-details-remove-suspected-issue)
+  (define-key evg-view-failure-details-mode-map (kbd "c") 'evg-view-failure-details-create-ticket))
 
-(defconst evg--issue-query-body
+(defconst evg--jira-ticket-query-body
   "issueKey,
    url,
    confidenceScore,
@@ -93,10 +109,10 @@
      }
    }")
 
-(defun evg--failure-details-query (task-id)
+(defun evg--failure-details-query ()
   (format
-   "{
-      task(taskId: %S) {
+   "query FailureDetails($taskId: String!) {
+      task(taskId: $taskId) {
         annotation {
           issues { %s }
           suspectedIssues { %s }
@@ -105,14 +121,24 @@
           }
         }
       }
+      bbGetCreatedTickets(taskId: $taskId) {
+        key
+        fields {
+          resolutionName
+          summary
+          status {
+            name
+          }
+        }
+      }
     }"
-   task-id
+   evg--issue-query-body
    evg--issue-query-body
    evg--issue-query-body))
 
-(defun evg-issue-status-text (issue)
+(defun evg-jira-ticket-status-text (ticket)
   "Propertize the given status string appropriately according to the value of the status (e.g. green for \"Fixed\")."
-  (let* ((text (or (evg-issue-resolution issue) (evg-issue-status issue)))
+  (let* ((text (or (evg-jira-ticket-resolution ticket) (evg-jira-ticket-status ticket)))
          (face (cond
                 ((string-match-p "Fixed" text) 'success)
                 ((string-match-p "\\(In Progress\\|Waiting\\)" text) 'warning)
@@ -181,7 +207,22 @@
          (cons "isIssue" is-known))
    "AddAnnotationIssue")
   (when (derived-mode-p 'evg-view-failure-details-mode)
-    (evg-failure-details-refresh)))
+    (evg-view-failure-details-refresh)))
+
+(defun evg-view-failure-details-create-ticket ()
+  (interactive)
+  (unless evg-current-task
+    (error "Can only add known or suspected issue from a buffer associated with a task"))
+  (when (yes-or-no-p "File a ticket for this task failure? ")
+    (evg-api-graphql-request
+     "mutation CreateTicket($taskId: String!, $execution: Int!) {
+       bbCreateTicket(taskId: $taskId, execution: $execution)
+    }"
+     (list (cons "taskId" (evg-task-id evg-current-task))
+           (cons "execution" (evg-task-execution evg-current-task)))
+     "CreateTicket")
+    (when (derived-mode-p 'evg-view-failure-details-mode)
+      (evg-view-failure-details-refresh))))
 
 (defun evg-view-failure-details-remove-suspected-issue (ticket)
   (interactive (list
@@ -219,8 +260,11 @@
 (defun evg-view-failure-details (buffer-name task &optional prev-buffer)
   (message "Fetching failure details...")
   (let* ((back-buffer (or prev-buffer (current-buffer)))
-         (data (evg-api-graphql-request (evg--failure-details-query (evg-task-id task))))
-         (failure-details (evg-failure-details-parse (evg--gethash data "task" "annotation"))))
+         (data (evg-api-graphql-request
+                (evg--failure-details-query)
+                (list (cons 'taskId (evg-task-id task)))
+                "FailureDetails"))
+         (failure-details (evg-failure-details-parse data)))
     (message "Fetching failure details...done")
     (switch-to-buffer (get-buffer-create buffer-name))
     (fundamental-mode)
@@ -229,12 +273,12 @@
 
     (evg-insert-task-header task)
 
-    (defun evg-issue-insert-link (issue)
+    (defun evg-issue-insert-link (key url)
       (insert "  - ")
       (insert-button
-       (evg-issue-key issue)
+       key
        'evg-issue-url
-       (evg-issue-url issue)
+       url
        'action
        (lambda (button)
          (browse-url (button-get button 'evg-issue-url))))
@@ -244,33 +288,47 @@
       (insert "      " (propertize (format "%s:" key) 'face 'italic) " " value)
       (newline))
 
-    (insert (propertize "Known Issues" 'face 'bold 'rear-nonsticky t))
-    (newline 2)
-    (seq-do
-     (lambda (issue)
-       (evg-issue-insert-link issue)
-       (evg-insert-issue-property "Summary" (evg-issue-summary issue))
-       (evg-insert-issue-property "Status" (evg-issue-status-text issue)))
-     (evg-failure-details-known-issues failure-details))
-    (when (eq (evg-failure-details-known-issues failure-details) nil)
-      (insert (propertize "No known issues related to this failure." 'face 'italic 'rear-nonsticky '(face)))
+    (defun evg-insert-jira-ticket (ticket)
+      (evg-insert-issue-property "Summary"
+                                 (format "%S"
+                                         (truncate-string-to-width (evg-jira-ticket-summary ticket)
+                                                                   (- (window-width) 30)
+                                                                   nil
+                                                                   nil
+                                                                   t)))
+      (evg-insert-issue-property "Status" (evg-jira-ticket-status-text ticket)))
+
+    (when-let ((created-tickets (evg-failure-details-created-tickets failure-details)))
+      (insert (propertize "Tickets Created From This Task" 'face 'bold))
+      (newline 2)
+      (seq-do
+       (lambda (ticket)
+         (let ((key (evg-jira-ticket-key ticket)))
+           (evg-issue-insert-link key (concat "https://jira.mongodb.org/browse/" key)))
+         (evg-insert-jira-ticket ticket))
+       (evg-failure-details-created-tickets failure-details))
       (newline))
 
-    (newline)
-
-    (insert (propertize "Suspected Issues" 'face 'bold))
-    (newline 2)
-    (seq-do
-     (lambda (issue)
-       (evg-issue-insert-link issue)
-       (evg-insert-issue-property "Summary" (evg-issue-summary issue))
-       (evg-insert-issue-property "Status" (evg-issue-status-text issue))
-       (evg-insert-issue-property "Confidence in suggestion" (format "%.1f%%" (* (evg-issue-confidence issue) 100.0))))
-     (evg-failure-details-suspected-issues failure-details))
-    (when (eq (evg-failure-details-suspected-issues failure-details) nil)
-      (insert (propertize "No suspected issues related to this failure." 'face 'italic 'rear-nonsticky '(face)))
+    (when-let ((known-issues (evg-failure-details-known-issues failure-details)))
+      (insert (propertize "Known Issues" 'face 'bold 'rear-nonsticky t))
+      (newline 2)
+      (seq-do
+       (lambda (issue)
+         (evg-issue-insert-link (evg-issue-key issue) (evg-issue-url issue))
+         (evg-insert-jira-ticket (evg-issue-ticket issue)))
+       (evg-failure-details-known-issues failure-details))
       (newline))
-    (newline)
+
+    (when-let ((suspected-issues (evg-failure-details-suspected-issues failure-details)))
+      (insert (propertize "Suspected Issues" 'face 'bold))
+      (newline 2)
+      (seq-do
+       (lambda (issue)
+         (evg-issue-insert-link (evg-issue-key issue) (evg-issue-url issue))
+         (evg-insert-jira-ticket (evg-issue-ticket issue))
+         (evg-insert-issue-property "Confidence in suggestion" (format "%.1f%%" (* (evg-issue-confidence issue) 100.0))))
+       (evg-failure-details-suspected-issues failure-details))
+      (newline))
 
     (insert (propertize "Note" 'face 'bold))
     (newline 2)

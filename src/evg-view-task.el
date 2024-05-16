@@ -6,7 +6,7 @@
 
 (require 'evg-ui)
 (require 'evg-util)
-(require 'evg-failure-details)
+(require 'evg-view-failure-details)
 
 (defvar-local evg-build-variant nil)
 (defvar-local evg-current-task nil)
@@ -300,8 +300,8 @@
              evg-back-key 'evg-back)))
   (define-key evg-view-task-mode-map (kbd "<RET>") 'evg-view-test-at-point)
   (define-key evg-view-task-mode-map (kbd "r") 'evg-view-task-refresh)
-  (define-key evg-view-patch-mode-map (kbd "M-n") 'evg-goto-next-test-failure)
-  (define-key evg-view-patch-mode-map (kbd "M-p") 'evg-goto-previous-test-failure)
+  (define-key evg-view-task-mode-map (kbd "M-n") 'evg-goto-next-test-failure)
+  (define-key evg-view-task-mode-map (kbd "M-p") 'evg-goto-previous-test-failure)
   (define-key evg-view-task-mode-map evg-back-key 'evg-back))
 
 (define-derived-mode

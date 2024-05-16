@@ -90,20 +90,19 @@
          (url-request-data
           (json-encode (list (cons "operationName" operation-name)
                              (cons "query" query)
-                             (cons "variables" variables))))
-         (buffer
-          (url-retrieve
-           "https://evergreen.mongodb.com/graphql/query"
-           (lambda (status)
-             (goto-char url-http-end-of-headers)
-             (let* ((json-object-type 'hash-table)
-                    (json-array-type 'list)
-                    (response (json-read)))
-               (when-let ((errors (gethash "errors" response)))
-                 (error "GraphQL error: %s" (json-encode errors)))
-               (funcall success-handler (gethash "data" response))))
-           nil
-           'silent)))))
+                             (cons "variables" variables)))))
+    (url-retrieve
+     "https://evergreen.mongodb.com/graphql/query"
+     (lambda (status)
+       (goto-char url-http-end-of-headers)
+       (let* ((json-object-type 'hash-table)
+              (json-array-type 'list)
+              (response (json-read)))
+         (when-let ((errors (gethash "errors" response)))
+           (error "GraphQL error: %s" (json-encode errors)))
+         (funcall success-handler (gethash "data" response))))
+     nil
+     'silent)))
 
 (defun evg-get-string-async (url handler &optional params)
   "Perform an asynchronous GET request against the given URL, passing result as string to the provided handler."
