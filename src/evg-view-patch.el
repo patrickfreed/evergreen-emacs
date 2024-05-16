@@ -45,7 +45,7 @@ tasks with certain statuses (e.g. tasks that succeeded).")
      :status (gethash "status" patch)
      :author (gethash "authorDisplayName" patch)
      :activated (gethash "activated" patch)
-     :create-time (gethash "submittedAt" times)
+     :create-time (gethash "createTime" patch)
      :start-time (gethash "started" times)
      :finish-time (gethash "finished" times))))
 
@@ -263,7 +263,7 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
       (cons "Revision" (evg-patch-revision evg-view-patch-patch)))
     (cons "Author" (evg-patch-author evg-view-patch-patch))
     (cons "Status" (evg-status-text (evg-patch-status evg-view-patch-patch)))
-    (cons "Created at" (evg-date-string (evg-patch-create-time evg-view-patch-patch)))))
+    (cons "Created at" (evg-patch-create-time evg-view-patch-patch))))
   (newline)
 
   ;; restart/abort buttons

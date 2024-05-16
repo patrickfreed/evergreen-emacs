@@ -194,6 +194,7 @@
   description
   status
   activated
+  createTime
   githash
   patchNumber
   authorDisplayName
