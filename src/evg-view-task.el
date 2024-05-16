@@ -25,7 +25,8 @@
   agent-log
   system-log
   event-log
-  tests)
+  tests
+  patch-title)
 
 (defun evg-task-is-failed (task)
   (let ((status (evg-task-status task)))
@@ -80,42 +81,44 @@
    :event-log (evg--gethash data "logs" "eventLogLink")
    :tests (seq-map 'evg-task-test-parse (evg--gethash data "tests" "testResults"))))
 
-(defun evg-get-task (task-id)
-  (evg-task-parse-graphql
-   (evg--gethash
-    (evg-api-graphql-request
-     (format
-      "{
-         task(taskId: %S) {
-           id,
-           displayName,
-           buildVariantDisplayName,
-           startTime,
-           finishTime,
-           status,
-           execution,
-           logs {
-             agentLogLink,
-             allLogLink,
-             eventLogLink,
-             systemLogLink,
-             taskLogLink,
-           }
-           tests {
-             testResults {
-               testFile,
-               status,
-               startTime,
-               endTime,
-               logs {
-                 urlRaw,
-               }
-             }
-           }
-         }
-       }"
-      task-id))
-    "task")))
+(defun evg-get-task (task-id patch-title)
+  (let ((task (evg-task-parse-graphql
+               (evg--gethash
+                (evg-api-graphql-request
+                 (format
+                  "{
+                     task(taskId: %S) {
+                       id,
+                       displayName,
+                       buildVariantDisplayName,
+                       startTime,
+                       finishTime,
+                       status,
+                       execution,
+                       logs {
+                         agentLogLink,
+                         allLogLink,
+                         eventLogLink,
+                         systemLogLink,
+                         taskLogLink,
+                       }
+                       tests {
+                         testResults {
+                           testFile,
+                           status,
+                           startTime,
+                           endTime,
+                           logs {
+                             urlRaw,
+                           }
+                         }
+                       }
+                     }
+                   }"
+                  task-id))
+                "task"))))
+    (setf (evg-task-patch-title task) patch-title)
+    task))
 
 (defface evg-view-task-title
   '((t
@@ -218,12 +221,12 @@
     (message "No more failures")))
 
 (defun evg-current-task-full-name ()
-  (format "%s / %s"  evg-build-variant (evg-task-display-name evg-current-task)))
+  (format "%s / %s"  (evg-task-build-variant-display-name evg-current-task) (evg-task-display-name evg-current-task)))
 
 (defun evg-insert-task-header (task)
   (evg-ui-insert-header
    (list
-    (cons "Patch description" evg-view-task-patch-title)
+    (cons "Patch" (evg-task-patch-title task))
     (cons "Task Name" (evg-task-display-name task))
     (cons "Build Variant" (evg-task-build-variant-display-name task))
     (cons "Execution" (format "%d" (1+ (evg-task-execution task))))
@@ -233,7 +236,7 @@
 
 (defun evg-view-task (task-id &optional patch-title previous-buffer)
   (message "Fetching task data...")
-  (let ((task (evg-get-task task-id)))
+  (let ((task (evg-get-task task-id patch-title)))
     (message "Fetching task data...done")
     (let ((full-display-name (format "%s / %s" (evg-task-build-variant-display-name task) (evg-task-display-name task)))
           (prefix (if patch-title (concat patch-title " / ") "")))

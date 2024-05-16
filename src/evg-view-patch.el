@@ -69,8 +69,8 @@ tasks with certain statuses (e.g. tasks that succeeded).")
 
 (defun evg-patch-title (patch)
   (if-let ((patch-number (evg-patch-number patch)))
-      (format "Patch %d by %s" (evg-patch-number patch) (evg-patch-author patch))
-    (format "Revision %s by %s" (substring (evg-patch-revision patch) 0 7) (evg-patch-author patch))))
+      (format "Patch %d - %S" (evg-patch-number patch) (evg-patch-description patch))
+    (format "Revision %s - %S" (substring (evg-patch-revision patch) 0 7) (evg-patch-description patch))))
 
 (defun evg-patch-abort (patch)
   "Abort the provided patch. This does not refresh the buffer."

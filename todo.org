@@ -143,7 +143,6 @@
 - [X] goto next/prev test failure in task view
 - [X] goto first error in logs view
 - [X] add known/suspected issue button
-- [ ] up-to-date task information in failure details buffer
 - [ ] button to file ticket for failure
   - [ ] view created tickets, if any
 - [ ] fix date formatting and/or file ticket about inconsistent formats
@@ -209,7 +208,7 @@ CLOSED: [2022-06-11 Sat 19:57]
   - [ ] replace all sync API with async API
   - [ ] remove request / consolidate on request
 
-* TODO ui improvements [0/5]
+* TODO ui improvements [0/4]
   - [ ] indicate text is "clickable" on hover/point entry
   - [ ] add breadcrumbs header for navigating patch > task > test
   - [ ] select project name from those specified in ~/.evergreen.yml
@@ -230,7 +229,7 @@ CLOSED: [2022-06-11 Sat 19:57]
 
 * TODO diffs
 
-* TODO quick wins [2/15]
+* TODO quick wins [2/17]
   - [ ] paginate evergreen-status page via '+' button (see magit-log for inspiration)
   - [ ] "my patches" buffer (across projects)
   - [ ] "my patches" buffer (within project)
@@ -246,6 +245,10 @@ CLOSED: [2022-06-11 Sat 19:57]
   - [X] use "q" to close buffers instead of "<"
   - [ ] from patch page, allow restarting subset of tasks
   - [ ] include patch in task view buffers
+  - [ ] abbreviate buffer names / log viewer breadcrumps
+  - [ ] up-to-date task information in failure details buffer
+    - failed -> known issue after adding known issue
+    - not a big deal though
 
 * TODO new interactive commands [0/3]
   - [ ] view patch by id/URL

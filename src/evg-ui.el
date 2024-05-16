@@ -105,7 +105,7 @@
      (lambda (pair)
        (when pair
         (insert
-         (format "%-20s"
+         (format "%-16s"
                  (with-temp-buffer
                    (insert (format "%s:" (car pair)))
                    (add-text-properties (point-min) (point-max) (list 'face 'bold))
