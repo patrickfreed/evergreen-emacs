@@ -131,12 +131,24 @@
 
 * ---------------- release ready here ---------------
   
-* TODO BB integrations / failure details [8/14]
+* TODO BB integrations / failure details [9/15]
 - [X] add button to switch to failure-details buffer for that task
+  - [X] add it for all failures
 - [X] linkify build baron link
 - [X] linkify issue
 - [X] list known and suspected issues
 - [X] goto next link in buffer
+- [X] indicate if failure is known issue or not
+  - [X] ensure task buffer reflects this
+- [X] goto next/prev test failure in task view
+- [X] goto first error in logs view
+- [X] add known/suspected issue button
+- [ ] up-to-date task information in failure details buffer
+- [ ] button to file ticket for failure
+  - [ ] view created tickets, if any
+- [ ] fix date formatting and/or file ticket about inconsistent formats
+- [ ] mark failure as investigated
+- [ ] "relevant commits"
 - [-] sort failed tasks to top
   - [X] hide passed tests
   - [X] print aggregate statuses
@@ -145,16 +157,7 @@
   - [X] fix newline bug
   - [X] show hidden tests
   - [ ] fix bug where string arg is null on last task failure
-- [X] indicate if failure is known issue or not
-  - [X] ensure task buffer reflects this
-- [X] goto next/prev test failure in task view
-- [X] goto first error in logs view
-- [ ] button to file ticket for failure
-  - [ ] view created tickets, if any
-- [ ] add known issue button
-- [ ] fix date formatting and/or file ticket about inconsistent formats
-- [ ] mark failure as investigated
-- [ ] "relevant commits"
+- [ ] decide on naming convention for buffers
 
 * TODO Commit queue [0/2]
   - [ ] Add commit queue to status page
@@ -227,7 +230,7 @@ CLOSED: [2022-06-11 Sat 19:57]
 
 * TODO diffs
 
-* TODO quick wins [2/14]
+* TODO quick wins [2/15]
   - [ ] paginate evergreen-status page via '+' button (see magit-log for inspiration)
   - [ ] "my patches" buffer (across projects)
   - [ ] "my patches" buffer (within project)
@@ -242,6 +245,7 @@ CLOSED: [2022-06-11 Sat 19:57]
   - [ ] include inactive versions in waterfall
   - [X] use "q" to close buffers instead of "<"
   - [ ] from patch page, allow restarting subset of tasks
+  - [ ] include patch in task view buffers
 
 * TODO new interactive commands [0/3]
   - [ ] view patch by id/URL

@@ -105,7 +105,7 @@
      (lambda (pair)
        (when pair
         (insert
-         (format "%-16s"
+         (format "%-20s"
                  (with-temp-buffer
                    (insert (format "%s:" (car pair)))
                    (add-text-properties (point-min) (point-max) (list 'face 'bold))
@@ -113,7 +113,7 @@
          (with-temp-buffer
            (setq fill-column (- (window-width) 26))
            (setq fill-prefix (make-string 16 ? ))
-           (insert (cdr pair))
+           (insert (or (cdr pair) "nil"))
            (fill-paragraph)
            (buffer-string))
          )

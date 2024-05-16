@@ -60,30 +60,37 @@
     :parser 'json-read))
 
 ;; From: https://github.com/rcy/graphql-elisp/blob/master/graphql.el
-(defun evg-api-graphql-request (query &optional variables)
+;; TODO: write macro to collapse sync / async
+(defun evg-api-graphql-request (query &optional variables operation-name)
   (let* ((url-request-method "POST")
          (url-request-extra-headers
           (list (cons "Content-Type"  "application/json")
                 (cons "Api-User" evg-user)
                 (cons "Api-Key" evg-api-key)))
          (url-request-data
-          (json-encode (list (cons "query" query)
-                             (cons "variables" (and variables (json-encode variables))))))
+          (json-encode (list (cons "operationName" operation-name)
+                             (cons "query" query)
+                             (cons "variables" variables))))
          (buffer (url-retrieve-synchronously "https://evergreen.mongodb.com/graphql/query" t)))
     (with-current-buffer buffer
       (goto-char url-http-end-of-headers)
-      (gethash "data" (let ((json-object-type 'hash-table))
-                        (json-read))))))
+      (let* ((json-object-type 'hash-table)
+             (json-array-type 'list)
+             (response (json-read)))
+        (when-let ((errors (gethash "errors" response)))
+          (error "GraphQL error: %s" (json-encode errors)))
+        (gethash "data" response)))))
 
-(defun evg-api-graphql-request-async (query success-handler &optional variables)
+(defun evg-api-graphql-request-async (query success-handler &optional variables operation-name)
   (let* ((url-request-method "POST")
          (url-request-extra-headers
           (list (cons "Content-Type" "application/json")
                 (cons "Api-User" evg-user)
                 (cons "Api-Key" evg-api-key)))
          (url-request-data
-          (json-encode (list (cons "query" query)
-                             (cons "variables" (and variables (json-encode variables))))))
+          (json-encode (list (cons "operationName" operation-name)
+                             (cons "query" query)
+                             (cons "variables" variables))))
          (buffer
           (url-retrieve
            "https://evergreen.mongodb.com/graphql/query"
@@ -91,9 +98,10 @@
              (goto-char url-http-end-of-headers)
              (let* ((json-object-type 'hash-table)
                     (json-array-type 'list)
-                    (raw-data (json-read))
-                    (data (gethash "data" raw-data)))
-               (funcall success-handler data)))
+                    (response (json-read)))
+               (when-let ((errors (gethash "errors" response)))
+                 (error "GraphQL error: %s" (json-encode errors)))
+               (funcall success-handler (gethash "data" response))))
            nil
            'silent)))))
 
