@@ -131,7 +131,7 @@
 
 * ---------------- release ready here ---------------
   
-* TODO BB integrations / failure details [10/15]
+* TODO BB integrations / failure details [11/16]
 - [X] add button to switch to failure-details buffer for that task
   - [X] add it for all failures
 - [X] linkify build baron link
@@ -148,6 +148,9 @@
 - [ ] fix date formatting and/or file ticket about inconsistent formats
 - [ ] mark failure as investigated
 - [ ] "relevant commits"
+- [X] up-to-date task information in failure details buffer
+  - failed -> known issue after adding known issue
+  - not a big deal though
 - [-] sort failed tasks to top
   - [X] hide passed tests
   - [X] print aggregate statuses
@@ -246,9 +249,6 @@ CLOSED: [2022-06-11 Sat 19:57]
   - [ ] from patch page, allow restarting subset of tasks
   - [ ] include patch in task view buffers
   - [ ] abbreviate buffer names / log viewer breadcrumps
-  - [ ] up-to-date task information in failure details buffer
-    - failed -> known issue after adding known issue
-    - not a big deal though
   - [ ] keybinds for text button functionality
 
 * TODO new interactive commands [0/3]

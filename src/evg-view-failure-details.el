@@ -113,6 +113,7 @@
   (format
    "query FailureDetails($taskId: String!) {
       task(taskId: $taskId) {
+        status
         annotation {
           issues { %s }
           suspectedIssues { %s }
@@ -271,6 +272,7 @@
     (read-only-mode -1)
     (erase-buffer)
 
+    (setf (evg-task-status task) (evg--gethash data "task" "status"))
     (evg-insert-task-header task)
 
     (defun evg-issue-insert-link (key url)
