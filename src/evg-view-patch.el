@@ -242,7 +242,8 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
   (when prev-buffer (setq-local evg-previous-buffer prev-buffer))
   (setq-local evg-view-patch-patch patch)
   (setq-local evg-view-patch-tasks (or tasks (evg-get-current-patch-tasks)))
-  (setq-local evg-view-patch-task-format (or task-format 'grid))
+  (when task-format
+    (setq-local evg-view-patch-task-format task-format))
   (setq-local global-hl-line-mode nil)
   (setq-local cursor-type 'hollow)
 
