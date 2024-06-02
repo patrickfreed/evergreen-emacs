@@ -94,13 +94,16 @@
     (url-retrieve
      "https://evergreen.mongodb.com/graphql/query"
      (lambda (status)
-       (goto-char url-http-end-of-headers)
-       (let* ((json-object-type 'hash-table)
-              (json-array-type 'list)
-              (response (json-read)))
-         (when-let ((errors (gethash "errors" response)))
-           (error "GraphQL error: %s" (json-encode errors)))
-         (funcall success-handler (gethash "data" response))))
+       (if url-http-end-of-headers
+           (progn
+             (goto-char url-http-end-of-headers)
+             (let* ((json-object-type 'hash-table)
+                    (json-array-type 'list)
+                    (response (json-read)))
+               (when-let ((errors (gethash "errors" response)))
+                 (error "GraphQL error: %s" (json-encode errors)))
+               (funcall success-handler (gethash "data" response))))
+         (message "http request failed: %S" status)))
      nil
      'silent)))
 
