@@ -133,9 +133,9 @@
         }
       }
     }"
-   evg--issue-query-body
-   evg--issue-query-body
-   evg--issue-query-body))
+   evg--jira-ticket-query-body
+   evg--jira-ticket-query-body
+   evg--jira-ticket-query-body))
 
 (defun evg-jira-ticket-status-text (ticket)
   "Propertize the given status string appropriately according to the value of the status (e.g. green for \"Fixed\")."
@@ -272,7 +272,7 @@
     (read-only-mode -1)
     (erase-buffer)
 
-    (setf (evg-task-status task) (evg--gethash data "task" "status"))
+    ;; (setf (evg-task-status task) (evg--gethash data "task" "status"))
     (evg-insert-task-header task)
 
     (defun evg-issue-insert-link (key url)
