@@ -43,7 +43,8 @@
   status
   log-url
   start-time
-  finish-time)
+  finish-time
+  duration)
 
 (defun evg-task-test-parse (test-data)
   (make-evg-task-test
@@ -51,14 +52,23 @@
    :status (evg--gethash test-data "status")
    :start-time (evg--gethash test-data "startTime")
    :finish-time (evg--gethash test-data "endTime")
+   :duration (evg--gethash test-data "duration")
    :log-url (evg--gethash test-data "logs" "urlRaw")))
+
+(defun evg-task-test-duration-string (test)
+  (let ((duration (evg-task-test-duration test)))
+    (cond
+     ((< duration 1) (format "%dms" (* duration 1000)))
+     ((< duration 60) (format "%ds" duration))
+     (t (format "%dm %ds" (/ duration 60) (% (truncate duration) 60))))))
 
 (defun evg-task-test-insert (test)
   (insert
    (propertize
-    (format "%7s %s"
+    (format "%7s %s (%s)"
             (evg-status-text (evg-task-test-status test))
-            (evg-task-test-file-name test))
+            (evg-task-test-file-name test)
+            (propertize (evg-task-test-duration-string test) 'face 'italic))
     'evg-task-test test))
   (newline))
 
@@ -108,6 +118,7 @@
                            status,
                            startTime,
                            endTime,
+                           duration
                            logs {
                              urlRaw,
                            }
