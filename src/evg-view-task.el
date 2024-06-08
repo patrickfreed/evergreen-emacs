@@ -170,6 +170,7 @@
       (with-current-buffer task-buffer
         (evg-view-logs
          (format "%s / %s" evg-view-task-patch-title (evg-current-task-full-name))
+         (evg-task-display-name evg-current-task)
          logs))))))
 
 (defun evg-current-task-abort ()
@@ -211,6 +212,7 @@
                           evg-view-task-patch-title
                           (evg-current-task-full-name)
                           (evg-task-test-file-name test))
+                  (evg-task-test-file-name test)
                   logs)))))))))
 
 (defun evg-goto-next-test-failure ()
@@ -337,16 +339,16 @@
              evg-back-key 'evg-back)))
   (define-key evg-view-logs-mode-map evg-back-key 'evg-back))
 
-(defun evg-view-logs (buffer-name logs)
+(defun evg-view-logs (buffer-name header logs)
   (let ((back-buffer (current-buffer)))
     (switch-to-buffer (get-buffer-create (format "evg-view-logs: %s" buffer-name)))
-    (message "Viewing logs for %s" buffer-name)
+    (message "Viewing logs for %s" header)
     (fundamental-mode)
     (read-only-mode -1)
     (insert logs)
     (evg-view-logs-mode)
     (setq-local evg-previous-buffer back-buffer)
-    (setq-local header-line-format buffer-name)
+    (setq-local header-line-format header)
     (goto-char (point-min))
     (compilation-next-error 1)
     (recenter-top-bottom)))

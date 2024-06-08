@@ -131,7 +131,7 @@
 
 * ---------------- release ready here ---------------
   
-* TODO BB integrations / failure details [12/16]
+* TODO BB integrations / failure details [14/22]
 - [X] add button to switch to failure-details buffer for that task
   - [X] add it for all failures
 - [X] linkify build baron link
@@ -146,20 +146,27 @@
 - [X] button to file ticket for failure
   - [X] view created tickets, if any
 - [X] fix date formatting and/or file ticket about inconsistent formats
-- [ ] mark failure as investigated
+- [X] readable buffer names
+  - [X] brief title in log view
+  - [X] truncate patch description
+- [ ] time taken for tests
+- [ ] sort failed build variants to the top
+- [ ] base status
 - [ ] "relevant commits"
+- [ ] mark failure as investigated
 - [X] up-to-date task information in failure details buffer
   - failed -> known issue after adding known issue
   - not a big deal though
-- [-] sort failed tasks to top
+- [X] sort failed tasks to top
   - [X] hide passed tests
   - [X] print aggregate statuses
   - [X] default to text view
   - [X] fix formatting of failed tests in text mode
   - [X] fix newline bug
   - [X] show hidden tests
-  - [ ] fix bug where string arg is null on last task failure
+- [ ] fix bug where string arg is null on last task failure
 - [ ] decide on naming convention for buffers
+- [ ] view failure details while task still running
 
 * TODO Commit queue [0/2]
   - [ ] Add commit queue to status page
