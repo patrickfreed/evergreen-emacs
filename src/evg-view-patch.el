@@ -316,7 +316,7 @@ results (either 'text or 'grid) and a previous buffer that can be returned to."
           (insert " (" (string-join (reverse aggregate-stats) ", ") ")"))
         (buffer-string)))
      (newline)
-     (evg-insert-variant-tasks (cdr variant-tasks) task-format)
+     (evg-insert-variant-tasks (cdr variant-tasks) evg-view-patch-task-format)
      (newline))
    evg-view-patch-tasks)
   (read-only-mode)
