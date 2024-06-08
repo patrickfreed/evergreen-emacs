@@ -7,6 +7,7 @@
 (require 'evg-ui)
 (require 'evg-util)
 (require 'evg-view-failure-details)
+(require 'evg-view-files)
 
 (defvar-local evg-build-variant nil)
 (defvar-local evg-current-task nil)
@@ -189,6 +190,10 @@
      (message "Task restarted")
      (evg-view-task-refresh))))
 
+(defun evg-files-debug ()
+  (interactive)
+  (evg-view-files evg-current-task))
+
 (defun evg-test-at-point ()
   (get-text-property (point) 'evg-task-test))
 
@@ -266,6 +271,8 @@
 
       (insert-button "View Task Logs" 'action (lambda (_) (evg-view-current-task-logs)))
       (newline)
+      (insert-button "View Files" 'action (lambda (_) (evg-view-files evg-current-task)))
+      (newline)
       (when (evg-task-is-failed task)
         (insert-button "View Failure Details"
                        'action (lambda (_) (evg-view-failure-details
@@ -289,12 +296,14 @@
         (if (or failed-tests passed-tests)
             (progn
               (insert
-               (format "Test Results (%s, %s):"
+               (concat (evg--ui-bold "Test Results (")
                        (propertize (format "%d passed" (length passed-tests)) 'face '('success . nil))
-                       (propertize (format "%d failed" (length failed-tests)) 'face '('error . nil))))
+                       (evg--ui-bold ", ")
+                       (propertize (format "%d failed" (length failed-tests)) 'face '('error . nil))
+                       (evg--ui-bold "):")))
               (newline)
               (seq-do 'evg-task-test-insert failed-tests)
-              (seq-do 'evg-task-test-insert passed-tests))
+              (seq-do 'evg-task-test-insert passed-tests)))
           (insert (propertize "No test results to display." 'face 'italic)))))
     (read-only-mode)
     (goto-char (point-min))))

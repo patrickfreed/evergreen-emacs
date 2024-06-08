@@ -2,6 +2,8 @@
 
 (provide 'evg-ui)
 
+(require 'evg-util)
+
 (require 'seq)
 
 ;; back navigation
@@ -121,4 +123,38 @@
      items)
     (let ((overlay (make-overlay start (point))))
       (overlay-put overlay 'face 'evg-header))))
+
+(defun evg--ui-insert-link (key url)
+  (insert-button
+   key
+   'evg-link-url
+   url
+   'action
+   (lambda (button)
+     (browse-url (button-get button 'evg-link-url)))))
+
+(defun evg--ui-bold (text)
+  (propertize text 'face 'bold))
+
+(defun evg--ui-has-link-at-point ()
+  (not (eq (get-char-property (point) 'button) nil)))
+
+(defun evg--ui-goto-link (travel-fn)
+  ;; First, travel past any link that point is already on.
+  ;; Then try to advance to the next one.
+  (let ((initial-point (point)))
+    (when (evg--advance-until travel-fn (lambda () (not (evg--ui-has-link-at-point))))
+      (when (not (evg--advance-until travel-fn 'evg--ui-has-link-at-point))
+        (message "No more links")
+        (goto-char initial-point)))))
+
+(defun evg--ui-goto-next-link ()
+  "Move point to the next link in the failure-details buffer, if any."
+  (interactive)
+  (evg--ui-goto-link 'evg--try-forward-char))
+
+(defun evg--ui-goto-previous-link ()
+  "Move point to the previous link in the failure-details buffer, if any."
+  (interactive)
+  (evg--ui-goto-link 'evg--try-backward-char))
   
